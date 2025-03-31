@@ -23,7 +23,7 @@ def reset_game():
 
 # Define callback function to process defense
 def process_defense():
-    if st.session_state.defense_input:
+    if 'defense_input' in st.session_state and st.session_state.defense_input:
         game_state = st.session_state.game_state
         defense = st.session_state.defense_input
         
@@ -95,7 +95,7 @@ with st.sidebar:
     st.markdown("### How to Play")
     st.markdown("""
     1. Type a regex pattern in the defense input
-    2. Hit Enter to submit your defense
+    2. Click the "Attack!" button to submit your defense
     3. Match attack strings but avoid noncombatants
     4. Score points based on regex complexity
     5. Game ends if score becomes negative
@@ -176,21 +176,32 @@ with col2:
 
 # Defense input and score display
 st.subheader("Defense (Regex)")
-defense_col, score_col = st.columns([3, 1])
+defense_col, button_col, score_col = st.columns([3, 1, 1])
 
 with defense_col:
-    # Defense input with callback for processing
+    # Defense input
     if game_state.game_over:
         st.text_input("Enter your regex pattern:", disabled=True, 
                      placeholder="Game Over - Start a new game")
-        if st.button("Start New Game"):
-            reset_game()
     else:
         defense = st.text_input("Enter your regex pattern:", key="defense_input", 
-                               on_change=process_defense, placeholder="Type regex here and press Enter")
+                               placeholder="Type regex pattern here")
+
+with button_col:
+    # Attack button
+    st.write("")  # Add some spacing
+    st.write("")  # Add some spacing
+    if game_state.game_over:
+        if st.button("Start New Game", type="primary"):
+            reset_game()
+    else:
+        if st.button("Attack!", type="primary", on_click=process_defense):
+            pass  # The on_click callback handles the logic
 
 with score_col:
     # Show score with color based on value
+    st.write("")  # Add some spacing
+    st.write("")  # Add some spacing
     score_color = "green" if game_state.score >= 0 else "red"
     st.markdown(f"<h2 style='color:{score_color};'>Score: {game_state.score}</h2>", unsafe_allow_html=True)
 
@@ -204,3 +215,27 @@ if game_state.message:
         st.warning(game_state.message)
     else:
         st.info(game_state.message)
+
+# Add a regex cheat sheet at the bottom
+with st.expander("Regex Cheat Sheet"):
+    st.markdown("""
+    | Pattern | Description | Example |
+    | ------- | ----------- | ------- |
+    | `.` | Matches any character except newline | `a.c` matches "abc", "adc", etc. |
+    | `^` | Matches start of string | `^abc` matches "abc" at the start of a string |
+    | `$` | Matches end of string | `abc$` matches "abc" at the end of a string |
+    | `*` | Matches 0 or more repetitions | `ab*c` matches "ac", "abc", "abbc", etc. |
+    | `+` | Matches 1 or more repetitions | `ab+c` matches "abc", "abbc", but not "ac" |
+    | `?` | Matches 0 or 1 repetition | `ab?c` matches "ac" and "abc" |
+    | `{n}` | Matches exactly n repetitions | `ab{2}c` matches "abbc" |
+    | `{n,}` | Matches n or more repetitions | `ab{2,}c` matches "abbc", "abbbc", etc. |
+    | `{n,m}` | Matches between n and m repetitions | `ab{1,2}c` matches "abc" and "abbc" |
+    | `\\` | Escapes special characters | `\\.` matches "." |
+    | `[]` | Matches a set of characters | `[abc]` matches "a", "b", or "c" |
+    | `[^]` | Matches characters NOT in the set | `[^abc]` matches any character except "a", "b", or "c" |
+    | `\|` | Alternation (OR) | `a\|b` matches "a" or "b" |
+    | `()` | Creates a group | `(abc)+` matches "abc", "abcabc", etc. |
+    | `(?:)` | Non-capturing group | `(?:abc)+` same as above but doesn't capture |
+    | `(?=)` | Positive lookahead | `a(?=b)` matches "a" only if followed by "b" |
+    | `(?!)` | Negative lookahead | `a(?!b)` matches "a" only if not followed by "b" |
+    """)
